@@ -13,15 +13,15 @@
 
 CREATE VIEW abonati_fideli
 AS
-SELECT  a.nume AS 'Nume Abonat',
+    SELECT a.nume AS 'Nume Abonat',
         a.adresa AS 'Adresa Abonat',
         a.data_abonare AS 'Data Abonare',
-        COUNT(c.id) AS 'Numar Comenzi', 
+        COUNT(c.id) AS 'Numar Comenzi',
         SUM(c.pret_total) AS 'Pret Total Comenzi'
-FROM abonat AS a
-INNER JOIN comanda AS c ON a.id = c.id_abonat
-GROUP BY a.nume, a.adresa, a.data_abonare
-HAVING COUNT(c.id) >= 3
+    FROM abonat AS a
+        INNER JOIN comanda AS c ON a.id = c.id_abonat
+    GROUP BY a.nume, a.adresa, a.data_abonare
+    HAVING COUNT(c.id) >= 3
 
 -- SELECT * FROM abonati_fideli;
 

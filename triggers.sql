@@ -1,31 +1,45 @@
--- tabelul "inserted" este un tabel virtual creat si utilizat in contextul trigger-ului
--- aceste permite accesul in randul valorilor afectate de operatiile de UPDATE,
--- INSERT, etc.
+-- tabelul "inserted" este un tabel virtual si contine valorile
+-- pe care le inseram 
 
--- DROP TRIGGER actualizare_comanda
+DROP TRIGGER actualizare_stoc_si_pret;
 
-CREATE TRIGGER actualizare_comanda
-ON comanda
-FOR INSERT
+CREATE TRIGGER actualizare_stoc_si_pret
+ON medicamente_comandate
+AFTER INSERT
 AS
-DECLARE @pret_total DECIMAL(10,2)
 BEGIN
 
-    -- pun in tabelul virtual variabila actualizata @pret_total
-    UPDATE comanda
-    SET @pret_total = comanda.pret_total - ( comanda.pret_total * (
-        SELECT procent_discount
-        FROM abonat
-        WHERE comanda.id_abonat = abonat.id
-    ))
-    FROM inserted
-    WHERE comanda.id = inserted.id
+    UPDATE s
+    SET s.stoc = s.stoc - i.cantitate
+    FROM stocuri s
+        INNER JOIN inserted i ON s.id_medicament = i.id_medicament;
 
-    -- dau update la tabelul comanda, modificand pretul_total cu
-    -- @pret_total din tabelul virtual inserted
-    UPDATE comanda
-    SET pret_total = @pret_total
-    FROM inserted
-    WHERE comanda.id = inserted.id
-END
+    UPDATE c
+    SET c.pret_total = c.pret_total - (c.pret_total * a.procent_discount)
+    FROM comanda c
+        -- ne intereseaza doar id-ul comenzii inserate
+        INNER JOIN inserted i ON c.id = i.id_comanda
+        INNER JOIN abonat a ON c.id_abonat = a.id;
+END;
+
+SELECT *
+FROM comanda
+
+SELECT *
+FROM medicamente_comandate
+
+SELECT *
+FROM stocuri
+
+SELECT *
+FROM abonat
+
+INSERT INTO comanda
+VALUES(20, '2024-02-04', 150)
+
+INSERT INTO medicamente_comandate
+VALUES(38, 1, 10, 150)
+
+EXEC fidelizare
+
 
